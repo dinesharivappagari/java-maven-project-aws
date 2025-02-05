@@ -1,27 +1,32 @@
 pipeline {
     agent any
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/your-username/jenkins-cicd-app.git'
+                git 'https://github.com/your-username/your-repo.git'
             }
         }
         stage('Build') {
             steps {
-                sh 'docker build -t your-dockerhub-username/jenkins-cicd-app:latest .'
+                sh 'mvn clean package'  // Change for Node.js or Python
             }
         }
-        stage('Push to Docker Hub') {
+        stage('Test') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh 'docker push your-dockerhub-username/jenkins-cicd-app:latest'
-                }
+                sh 'mvn test'  // Run JUnit/Selenium tests
             }
         }
-        stage('Deploy to EC2') {
+        stage('Docker Build & Push') {
+            steps {
+                sh 'docker build -t your-dockerhub-username/app:latest .'
+                sh 'docker login -u your-dockerhub-username -p your-dockerhub-password'
+                sh 'docker push your-dockerhub-username/app:latest'
+            }
+        }
+        stage('Deploy to AWS EC2') {
             steps {
                 sshagent(['jenkins-ssh-key']) {
-                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@your-ec2-ip "docker pull your-dockerhub-username/jenkins-cicd-app:latest && docker run -d -p 8080:8080 your-dockerhub-username/jenkins-cicd-app:latest"'
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@your-ec2-ip "docker pull your-dockerhub-username/app:latest && docker run -d -p 8080:8080 your-dockerhub-username/app:latest"'
                 }
             }
         }
