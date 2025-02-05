@@ -1,27 +1,37 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/your-username/jenkins-cicd-app.git'
+                git branch: 'main', credentialsId: 'github-credentials-id', url: 'https://github.com/dinesharivappagari/jenkins-cicd-app.git'
             }
         }
+
         stage('Build') {
             steps {
-                sh 'docker build -t your-dockerhub-username/jenkins-cicd-app:latest .'
+                sh 'npm install'  // Installing dependencies for the Node.js app
             }
         }
-        stage('Push to Docker Hub') {
+
+        stage('Test') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh 'docker push your-dockerhub-username/jenkins-cicd-app:latest'
-                }
+                sh 'npm test'  // Run tests if available (Optional)
             }
         }
+
         stage('Deploy to EC2') {
             steps {
                 sshagent(['jenkins-ssh-key']) {
-                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@your-ec2-ip "docker pull your-dockerhub-username/jenkins-cicd-app:latest && docker run -d -p 8080:8080 your-dockerhub-username/jenkins-cicd-app:latest"'
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.83.158.112 " 
+                        cd /var/www/html/jenkins-app || mkdir -p /var/www/html/jenkins-app &&
+                        git pull origin main || git clone https://github.com/your-username/jenkins-cicd-app.git /var/www/html/jenkins-app &&
+                        cd /var/www/html/jenkins-app &&
+                        npm install &&
+                        pm2 restart server.js || pm2 start server.js --name jenkins-app
+                        "
+                    '''
                 }
             }
         }
