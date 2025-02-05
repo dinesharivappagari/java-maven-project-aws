@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sshagent(['jenkins-ssh-key']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@3.83.158.112 "
+                        ssh -o StrictHostKeyChecking=no ubuntu@52.91.204.152 "
                         if [ ! -d '/var/www/html/jenkins-app' ]; then
                             git clone https://github.com/dinesharivappagari/java-maven-project-aws.git /var/www/html/jenkins-app
                         else
