@@ -4,19 +4,23 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', credentialsId: 'github-credentials-id', url: 'https://github.com/dinesharivappagari/jenkins-cicd-app.git'
+                git branch: 'main', credentialsId: 'github-credentials-id', url: 'https://github.com/dinesharivappagari/java-maven-project-aws.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm install'  // Installing dependencies for the Node.js app
+                dir('java-maven-project-aws') {  
+                    sh 'npm install'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test'  // Run tests if available (Optional)
+                dir('java-maven-project-aws') {
+                    sh 'npm test'
+                }
             }
         }
 
@@ -24,9 +28,12 @@ pipeline {
             steps {
                 sshagent(['jenkins-ssh-key']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@3.83.158.112 " 
-                        cd /var/www/html/jenkins-app || mkdir -p /var/www/html/jenkins-app &&
-                        git pull origin main || git clone https://github.com/your-username/jenkins-cicd-app.git /var/www/html/jenkins-app &&
+                        ssh -o StrictHostKeyChecking=no ubuntu@3.82.143.71"
+                        if [ ! -d '/var/www/html/jenkins-app' ]; then
+                            git clone https://github.com/dinesharivappagari/java-maven-project-aws.git /var/www/html/jenkins-app
+                        else
+                            cd /var/www/html/jenkins-app && git pull origin main
+                        fi &&
                         cd /var/www/html/jenkins-app &&
                         npm install &&
                         pm2 restart server.js || pm2 start server.js --name jenkins-app
